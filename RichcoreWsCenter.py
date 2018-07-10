@@ -58,7 +58,7 @@ class TASWsClass(threading.Thread):
             TasWs = None
         websocket.enableTrace(False)
 
-        # self.TickWs = websocket.WebSocketApp("wss://www.richcore.com/stream?streams=tqceth@ticker/ethbtc@ticker",
+        #self.TickWs = websocket.WebSocketApp("wss://www.richcore.com/stream?streams=tqceth@ticker/ethbtc@ticker",
         TasWs = websocket.WebSocketApp("wss://www.richcore.com/wires/RICHTUSDT/trades",
                                        on_message=self.Rich.on_TasMessage,
                                        on_error=self.Rich.on_TasError,
