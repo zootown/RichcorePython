@@ -76,9 +76,8 @@ class RichCoreClass():
         self.secret = secret
 
     def on_TasMessage(self, ws, message):
-        TASClientLock.acquire()
-        CientList = TASCientList.copy()
-        TASClientLock.release()
+        with TASClientLock:
+            CientList = TASCientList.copy()
         for CurClient in CientList:
             try:
                 CurClient.send(message.encode())
@@ -92,9 +91,8 @@ class RichCoreClass():
                 TASCientList.remove(CurClient)
 
     def on_DepthMessage(self, ws, message):
-        DepthClientLock.acquire()
-        CientList = DepthCientList.copy()
-        DepthClientLock.release()
+        with DepthClientLock:
+            CientList = DepthCientList.copy()
         for CurClient in CientList:
             try:
                 CurClient.send(message.encode())
@@ -206,10 +204,10 @@ secret = cf.get("Key", "Secret")
 
 Rich = RichCoreClass(key, secret)
 DepthCientList = set()
-DepthClientLock = threading.Lock()
+DepthClientLock = threading.RLock()
 HadSubDepth = False
 TASCientList = set()
-TASClientLock = threading.Lock()
+TASClientLock = threading.RLock()
 HadSubTAS = False
 
 
@@ -229,10 +227,9 @@ class DepthThreadClass(threading.Thread):
         while True:
             clientsocket, addr = serversocket.accept()
             print("Depth请求连入: %s" % str(addr), end='\n')
-            DepthClientLock.acquire()
-            clientsocket.settimeout(5)
-            DepthCientList.add(clientsocket)
-            DepthClientLock.release()
+            with DepthClientLock:
+                clientsocket.settimeout(5)
+                DepthCientList.add(clientsocket)
 
             if not HadSubDepth:
                 StartDepthWs(Rich)
@@ -255,9 +252,8 @@ class TASThreadClass(threading.Thread):
         while True:
             clientsocket, addr = serversocket.accept()
             print("TAS请求连入: %s" % str(addr), end='\n')
-            TASClientLock.acquire()
-            TASCientList.add(clientsocket)
-            TASClientLock.release()
+            with TASClientLock:
+                TASCientList.add(clientsocket)
 
             if not HadSubTAS:
                 StartTASWs(Rich)
